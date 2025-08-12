@@ -25,7 +25,10 @@ namespace pythonDotNet
                 // var pathToVirtualEnv = @"C:\Users\charlie\miniconda3\envs\python313";
 
                 // miniconda "numpy" virtual environment with numpy python module loaded
-                var pathToVirtualEnv = @"C:\Users\charlie\miniconda3\envs\numpy";
+                // var pathToVirtualEnv = @"C:\Users\charlie\miniconda3\envs\numpy";
+
+                // use the local python that has been copied to the applicaton directory
+                var pathToVirtualEnv = @".\Python";
 
                 var pathToVirtualEnvDll = $"{pathToVirtualEnv}\\python313.dll";
 
@@ -34,9 +37,9 @@ namespace pythonDotNet
                 Environment.SetEnvironmentVariable("PATH", path, EnvironmentVariableTarget.Process);
                 Environment.SetEnvironmentVariable("PYTHONHOME", pathToVirtualEnv, EnvironmentVariableTarget.Process);
                 Environment.SetEnvironmentVariable("PYTHONPATH", $"{pathToVirtualEnv}\\Lib\\site-packages;{pathToVirtualEnv}\\Lib;{pathToVirtualEnv}\\DLLs;{pathToVirtualEnv}\\Library\\lib", EnvironmentVariableTarget.Process);
+                
+                // this is only required when using matplotlib...but even with this I could not get it to work....
                 Environment.SetEnvironmentVariable("QT_PLUGIN_PATH", $"{pathToVirtualEnv}\\Library\\lib", EnvironmentVariableTarget.Process);
-
-
 
                 Runtime.PythonDLL = pathToVirtualEnvDll;
                 RuntimeData.FormatterType = typeof(NoopFormatter);
@@ -290,6 +293,8 @@ namespace pythonDotNet
 
         public static void matplotlibExample2()
         {
+            // note that this method when run after matplotlibExample1 inherits the python env with variables etc.
+
             using (PyModule scope = Py.CreateScope())
             {
                 dynamic np = scope.Import("numpy");
