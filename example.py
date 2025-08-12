@@ -1,5 +1,5 @@
 def hello_world():
-	print("Hello World!")
+	print("Hello World from example.py!")
 
 class Calculator:
     def add(self, num1, num2):
