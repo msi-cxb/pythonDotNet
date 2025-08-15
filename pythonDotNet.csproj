@@ -22,8 +22,4 @@
     <PackageReference Include="pythonnet" Version="3.0.5" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="(robocopy &quot;C:\Users\charlie\miniconda3\envs\numpy&quot; &quot;$(TargetDir)Python&quot; /MIR /NFL /NDL) ^&amp; IF %25ERRORLEVEL%25 LEQ 7 SET ERRORLEVEL=0" />
-  </Target>
-
 </Project>
