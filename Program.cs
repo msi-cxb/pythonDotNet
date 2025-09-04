@@ -1,6 +1,7 @@
 ﻿using Python.Runtime;
 using System.Data;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace pythonDotNet
 {
@@ -56,7 +57,7 @@ namespace pythonDotNet
                 Console.WriteLine($"starting...");
 
                 Console.WriteLine($"\n---------------------------------------------------\nusing an external DLL\n---------------------------------------------------\n");
-                if (true)
+                if (false)
                 {
                     using (Py.GIL())
                     {
@@ -89,7 +90,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------------------------------\nbasic python examples\n---------------------------------------------------\n");
-                if (true)
+                if (false)
                 {
                     // obtain the GIL for thread safety
                     using (Py.GIL())
@@ -279,7 +280,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------------------------------\npandas specific test code\n---------------------------------------------------\n");
-                if (true)
+                if (false)
                 {
                     using (Py.GIL())
                     {
@@ -372,8 +373,8 @@ namespace pythonDotNet
                         from datetime import datetime
 
                         # Load your dll (only needed if you call BasicDataFrame)
-                        # clr.AddReference("PythonDotNetDLL")
-                        # from CalcTestNS import PandasNet as pdnet
+                        clr.AddReference("PythonDotNetDLL")
+                        from CalcTestNS import PandasNet as pdnet
 
                         x = pd.DataFrame({
                             'A': [1, 2, 3],
@@ -388,10 +389,10 @@ namespace pythonDotNet
 
                         # convert DataFrame to Dictionary<string, Array> == BasicDataFrame
                         # it looks like this is not necessarily required as the dataframe above also works
-                        # y = pdnet.BasicDataFrame(x)
+                        y = pdnet.BasicDataFrame(x)
 
-                        # print("BasicDataFrame")
-                        # print(y)
+                        print("BasicDataFrame")
+                        print(y)
                         """;
 
                         using (dynamic scope = Py.CreateScope())
@@ -402,12 +403,27 @@ namespace pythonDotNet
                             Console.WriteLine($"-----------------\nC#:");
 
                             Dictionary<string, Array> df = scope.Eval("x");
-                            Console.WriteLine($"DataFrame\n--------------------\n{df}\n--------------------");
+                            Console.WriteLine($"--------------------\nDataFrame\n--------------------\n{df}\n--------------------");
                             DataTable dt1 = ConvertToDataTable(df);
                             Console.WriteLine($"DataFrame DataTable (num rows {dt1.Rows.Count})\n--------------------\n{DumpDataTable(dt1)}\n--------------------");
-                            //Dictionary<string, Array> bdf = scope.Eval("y");
-                            //DataTable dt2 = ConvertToDataTable(bdf);
-                            //Console.WriteLine($"BasicDataFrame DataTable (num rows {dt2.Rows.Count})\n--------------------\n{DumpDataTable(dt2)}\n--------------------");
+                            foreach (DataRow dataRow in dt1.Rows)
+                            {
+                                foreach (var item in dataRow.ItemArray)
+                                {
+                                    Console.WriteLine($"{item} {item.GetType()}");
+                                }
+                            }
+                            
+                            Dictionary<string, Array> bdf = scope.Eval("y");
+                            DataTable dt2 = ConvertToDataTable(bdf);
+                            Console.WriteLine($"--------------------\nBasicDataFrame DataTable (num rows {dt2.Rows.Count})\n--------------------\n{DumpDataTable(dt2)}\n--------------------");
+                            foreach (DataRow dataRow in dt2.Rows)
+                            {
+                                foreach (var item in dataRow.ItemArray)
+                                {
+                                    Console.WriteLine($"{item} {item.GetType()}");
+                                }
+                            }
                         }
 
                     }
@@ -513,9 +529,13 @@ namespace pythonDotNet
                 {
                     // keys are column names
                     var headers = dict.Keys;
-                    foreach (var colHeader in headers)
+                    var values = dict.Values;
+
+                    // create columns with names and types from dict
+                    foreach(var i in dict)
                     {
-                        dataTable.Columns.Add(colHeader);
+                        //Console.WriteLine($"column {i.Key} type {i.Value.GetType().GetElementType()}");
+                        dataTable.Columns.Add(i.Key, i.Value.GetType().GetElementType());
                     }
 
                     // i is the row number
@@ -528,10 +548,21 @@ namespace pythonDotNet
                         for (int col = 0; col < dict.Count; col++)
                         {
                             KeyValuePair<string, Array> p = dict.ElementAt(col);
-                            // Console.WriteLine($"row {row} col {col} key {p.Key} value {p.Value.GetValue(row)}");
-                            array[col] = p.Value.GetValue(row);
+                            //Console.WriteLine($"row {row} col {col} key {p.Key} value {p.Value.GetValue(row)} type {p.Value.GetValue(row).GetType()}");
+                            //switch (p.Value.GetValue(row).GetType().ToString())
+                            //{
+                            //    case "System.Int64":
+                            //        Console.WriteLine($"System.Int64");
+                            //        dataRow[col] = Convert.ToInt64(p.Value.GetValue(row));
+                            //        break;
+                            //    default:
+                            //        Console.WriteLine($">>>>>>>>>>>>> unhandled type {p.Value.GetValue(row).GetType().ToString()}");
+                            //        dataRow[col] = p.Value.GetValue(row);
+                            //        break;
+                            //}
+                            dataRow[col] = p.Value.GetValue(row);
                         }
-                        dataRow.ItemArray = array;
+
                         dataTable.Rows.Add(dataRow);
                     }
                 }
