@@ -1,4 +1,6 @@
 ﻿using Python.Runtime;
+using System.Data;
+using System.Text;
 
 namespace pythonDotNet
 {
@@ -14,7 +16,7 @@ namespace pythonDotNet
                 // miniconda "python313" virtual environment with no extra python modules loaded
                 // var pathToVirtualEnv = @"C:\Users\charlie\miniconda3\envs\python313";
 
-                // miniconda "numpy" virtual environment with numpy python module loaded
+                // miniconda "numpy" virtual environment with numpy/pandas python module loaded
                 var pathToVirtualEnv = @"C:\Users\charlie\miniconda3\envs\numpy";
 
                 // conda virtual environment copied to folder called "Python" in applicaton directory
@@ -53,7 +55,41 @@ namespace pythonDotNet
                 var threadState = PythonEngine.BeginAllowThreads();
                 Console.WriteLine($"starting...");
 
-                if (false)
+                Console.WriteLine($"\n---------------------------------------------------\nusing an external DLL\n---------------------------------------------------\n");
+                if (true)
+                {
+                    using (Py.GIL())
+                    {
+                        var pyScript = """
+                        import clr
+                        import sys
+
+                        assembly_path = r"H:\PythonDotNetDLL\bin\Debug\net8.0"
+                        sys.path.append(assembly_path)
+                        print(sys.path)
+
+                        clr.AddReference("PythonDotNetDLL")
+
+                        from CalcTestNS import Calculate
+
+                        ct = Calculate()
+                        print(ct.Add(1,1))
+
+                        params = [1,2]
+                        print(ct.Sub(*params))
+                        """;
+                        Console.WriteLine($"-----------------\nscript:");
+                        using (dynamic scope = Py.CreateScope())
+                        {
+                            scope.Exec(pyScript);
+                        }
+
+
+                    }
+                }
+
+                Console.WriteLine($"\n---------------------------------------------------\nbasic python examples\n---------------------------------------------------\n");
+                if (true)
                 {
                     // obtain the GIL for thread safety
                     using (Py.GIL())
@@ -242,13 +278,14 @@ namespace pythonDotNet
                     }
                 }
 
+                Console.WriteLine($"\n---------------------------------------------------\npandas specific test code\n---------------------------------------------------\n");
                 if (true)
                 {
                     using (Py.GIL())
                     {
                         //////////////////////////////////////////////////
                         // numpy and pandas
-                        // note that it does throw this error which I can't seem to fix...but it otherwise works
+                        // note that this does throw error which I can't seem to fix...but it otherwise works
                         // InvalidTZPathWarning: Invalid paths specified in PYTHONTZPATH environment variable.
                         //      Paths should be absolute but found the following relative paths:
                         //          .\share\zoneinfo
@@ -260,21 +297,119 @@ namespace pythonDotNet
                         import pandas as pd
                         print("TZPATH " + sysconfig.get_config_var("TZPATH"))
                         print(os.environ.get("PYTHONTZPATH"))
+
                         data = np.array([[0, 0], [0, 1] , [1, 0] , [1, 1]])
                         print(data)
                         print(type(data))
+
                         reward = np.array([1,0,1,0])
                         print(reward)
                         print(type(reward))
-                        dataset = pd.DataFrame()
-                        dataset['StateAttributes'] = data.tolist()
-                        dataset['reward'] = reward.tolist()
-                        print(dataset)
-                        print(type(dataset))
+
+                        dataframe = pd.DataFrame()
+                        dataframe['StateAttributes'] = data.tolist()
+                        dataframe['reward'] = reward.tolist()
+                        dataframe.index = ['row1','row2','row3','row4']
+                        print(dataframe)
+                        print(type(dataframe))
                         """;
-                        Console.WriteLine($"-----------------\nnumpy script:");
-                        PythonEngine.Exec(numpyScript);
+                        Console.WriteLine($"-----------------\nnumpy/pandas script:");
+                        using (dynamic scope = Py.CreateScope())
+                        {
+                            scope.Exec(numpyScript);
+                            dynamic np_array_data_Obj = scope.Eval("data");
+                            dynamic np_array_reward_Obj = scope.Eval("reward");
+                            dynamic pd_dataframe = scope.Eval("dataframe");
+
+                            Console.WriteLine($"------------------\nnp_array_data_Obj\n" +
+                                "{np_array_data_Obj}\n\n{np_array_data_Obj.GetType()}");
+                            Console.WriteLine($"------------------\nnp_array_reward_Obj\n" +
+                                "{np_array_reward_Obj}\n\n{np_array_reward_Obj.GetType()}");
+                            Console.WriteLine($"------------------\n" + 
+                                "pd_dataframe\n{pd_dataframe}\n\n{pd_dataframe.GetType()}");
+
+                            foreach ( var x in np_array_data_Obj)
+                            {
+                                Console.WriteLine($"----- {x}");
+                                foreach( var y in x)
+                                {
+                                    Console.WriteLine($">>> {y}");
+                                }
+                                Console.WriteLine($"-----");
+                            }
+
+                            Console.WriteLine($"---------\nhead(2)\n{pd_dataframe.head(2)}");
+                            Console.WriteLine($"---------\ntail(2)\n{pd_dataframe.tail(2)}");
+
+                            Console.WriteLine($"---------\niloc[0]\n{pd_dataframe.iloc[0]}");
+
+                            // range not working
+                            // Console.WriteLine($"{pd_dataframe.iloc[2:4]}");
+                            // loc not working
+                            // Console.WriteLine($"{pd_dataframe.loc("row2")}");
+
+
+
+                        }
                         Console.WriteLine($"-----------------\n");
+                    }
+                }
+
+                Console.WriteLine($"\n---------------------------------------------------\nusing pandasnet to get pandas dataframe into C# datatable\n---------------------------------------------------\n");
+                if (true)
+                { 
+                    using (Py.GIL())
+                    {
+                        var pyScript = """
+                        import sys
+                        # where PythonDotNetDLL lives...
+                        assembly_path = r"H:\PythonDotNetDLL\bin\Debug\net8.0"
+                        sys.path.append(assembly_path)
+                        
+                        import clr
+                        import pandasnet
+                        import pandas as pd
+                        from datetime import datetime
+
+                        # Load your dll (only needed if you call BasicDataFrame)
+                        # clr.AddReference("PythonDotNetDLL")
+                        # from CalcTestNS import PandasNet as pdnet
+
+                        x = pd.DataFrame({
+                            'A': [1, 2, 3],
+                            'B': [1.21, 1.22, 1.23],
+                            'C': ['foo', 'bar', 'other'],
+                            'D': [datetime(2021, 1, 21,12,0,1), datetime(2021, 1, 22,12,0,2), datetime(2021, 1, 23,12,0,3)]
+                        })
+
+                        # this will work in C# by itself as long as 'import pandasnet' is included
+                        print("DataFrame")
+                        print(x)
+
+                        # convert DataFrame to Dictionary<string, Array> == BasicDataFrame
+                        # it looks like this is not necessarily required as the dataframe above also works
+                        # y = pdnet.BasicDataFrame(x)
+
+                        # print("BasicDataFrame")
+                        # print(y)
+                        """;
+
+                        using (dynamic scope = Py.CreateScope())
+                        {
+                            Console.WriteLine($"-----------------\nscript:");
+                            scope.Exec(pyScript);
+
+                            Console.WriteLine($"-----------------\nC#:");
+
+                            Dictionary<string, Array> df = scope.Eval("x");
+                            Console.WriteLine($"DataFrame\n--------------------\n{df}\n--------------------");
+                            DataTable dt1 = ConvertToDataTable(df);
+                            Console.WriteLine($"DataFrame DataTable (num rows {dt1.Rows.Count})\n--------------------\n{DumpDataTable(dt1)}\n--------------------");
+                            //Dictionary<string, Array> bdf = scope.Eval("y");
+                            //DataTable dt2 = ConvertToDataTable(bdf);
+                            //Console.WriteLine($"BasicDataFrame DataTable (num rows {dt2.Rows.Count})\n--------------------\n{DumpDataTable(dt2)}\n--------------------");
+                        }
+
                     }
                 }
 
@@ -299,10 +434,10 @@ namespace pythonDotNet
                 Console.WriteLine($"Shutdown stop {diff.TotalSeconds}");
             }
 
-            // pause so we can see the output from the debug.writeline()
+            // pause so that user has option to look for output from debug.writeline()
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
-            Console.WriteLine("Key pressed! Program continues.");
+            Console.WriteLine("Key pressed! Program continues...");
         }
 
         public static object RunPythonCodeAndReturn(string pycode, object parameter, string parameterName, string returnedVariableName)
@@ -367,6 +502,67 @@ namespace pythonDotNet
                 plt.show();
                 plt.close();
             }
+        }
+
+        private static DataTable dataTable = null;
+        public static DataTable ConvertToDataTable(Dictionary<string, Array> dict)
+        {
+            using (dataTable = new DataTable())
+            {
+                if (dict.Count > 0)
+                {
+                    // keys are column names
+                    var headers = dict.Keys;
+                    foreach (var colHeader in headers)
+                    {
+                        dataTable.Columns.Add(colHeader);
+                    }
+
+                    // i is the row number
+                    for (int row = 0; row < dict.Values.Max(item => item.Length); row++)
+                    {
+                        DataRow dataRow = dataTable.NewRow();
+                        object[] array = new object[dict.Count];
+
+                        // j is the column number
+                        for (int col = 0; col < dict.Count; col++)
+                        {
+                            KeyValuePair<string, Array> p = dict.ElementAt(col);
+                            // Console.WriteLine($"row {row} col {col} key {p.Key} value {p.Value.GetValue(row)}");
+                            array[col] = p.Value.GetValue(row);
+                        }
+                        dataRow.ItemArray = array;
+                        dataTable.Rows.Add(dataRow);
+                    }
+                }
+            }
+            return dataTable;
+        }
+
+        public static string DumpDataTable(DataTable table)
+        {
+            string data = string.Empty;
+            StringBuilder sb = new StringBuilder();
+            foreach( DataColumn c in table.Columns)
+            {
+                sb.Append(c.ColumnName);
+                sb.Append(',');
+            }
+            sb.AppendLine();
+            if (null != table && null != table.Rows)
+            {
+                foreach (DataRow dataRow in table.Rows)
+                {
+                    foreach (var item in dataRow.ItemArray)
+                    {
+                        sb.Append(item);
+                        sb.Append(',');
+                    }
+                    sb.AppendLine();
+                }
+                data = sb.ToString();
+            }
+            return data;
         }
     }
 
