@@ -56,41 +56,8 @@ namespace pythonDotNet
                 var threadState = PythonEngine.BeginAllowThreads();
                 Console.WriteLine($"starting...");
 
-                Console.WriteLine($"\n---------------------------\nusing an external DLL\n---------------------------\n");
-                if (false)
-                {
-                    using (Py.GIL())
-                    {
-                        var pyScript = """
-                        import clr
-                        import sys
-
-                        assembly_path = r"H:\PythonDotNetDLL\bin\Debug\net8.0"
-                        sys.path.append(assembly_path)
-                        print(sys.path)
-
-                        clr.AddReference("PythonDotNetDLL")
-
-                        from CalcTestNS import Calculate
-
-                        ct = Calculate()
-                        print(ct.Add(1,1))
-
-                        params = [1,2]
-                        print(ct.Sub(*params))
-                        """;
-                        Console.WriteLine($"-----------------\nscript:");
-                        using (dynamic scope = Py.CreateScope())
-                        {
-                            scope.Exec(pyScript);
-                        }
-
-
-                    }
-                }
-
                 Console.WriteLine($"\n---------------------------\nbasic python examples\n---------------------------\n");
-                if (false)
+                if (true)
                 {
                     // obtain the GIL for thread safety
                     using (Py.GIL())
@@ -279,8 +246,41 @@ namespace pythonDotNet
                     }
                 }
 
+                Console.WriteLine($"\n---------------------------\nusing an external DLL\n---------------------------\n");
+                if (true)
+                {
+                    using (Py.GIL())
+                    {
+                        var pyScript = """
+                        import clr
+                        import sys
+
+                        assembly_path = r"H:\PythonDotNetDLL\bin\Debug\net8.0"
+                        sys.path.append(assembly_path)
+                        print(sys.path)
+
+                        clr.AddReference("PythonDotNetDLL")
+
+                        from CalcTestNS import Calculate
+
+                        ct = Calculate()
+                        print(ct.Add(1,1))
+
+                        params = [1,2]
+                        print(ct.Sub(*params))
+                        """;
+                        Console.WriteLine($"-----------------\nscript:");
+                        using (dynamic scope = Py.CreateScope())
+                        {
+                            scope.Exec(pyScript);
+                        }
+
+
+                    }
+                }
+
                 Console.WriteLine($"\n---------------------------\npandas specific test code\n---------------------------\n");
-                if (false)
+                if (true)
                 {
                     using (Py.GIL())
                     {
@@ -356,8 +356,8 @@ namespace pythonDotNet
                     }
                 }
 
-                Console.WriteLine($"\n---------------------------\nusing pandasnet to get pandas dataframe into C# datatable\n---------------------------\n");
-                if (false)
+                Console.WriteLine($"\n---------------------------\npandas dataframe to C# datatable (via pandasnet)\n---------------------------\n");
+                if (true)
                 { 
                     using (Py.GIL())
                     {
@@ -416,7 +416,7 @@ namespace pythonDotNet
                     }
                 }
 
-                Console.WriteLine($"\n---------------------------\nC# datatable to python\n---------------------------\n");
+                Console.WriteLine($"\n---------------------------\nC# datatable to python pandas dataframe\n---------------------------\n");
                 if (true)
                 {
                     using (Py.GIL())
