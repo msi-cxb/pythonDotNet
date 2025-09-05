@@ -56,7 +56,7 @@ namespace pythonDotNet
                 var threadState = PythonEngine.BeginAllowThreads();
                 Console.WriteLine($"starting...");
 
-                Console.WriteLine($"\n---------------------------------------------------\nusing an external DLL\n---------------------------------------------------\n");
+                Console.WriteLine($"\n---------------------------\nusing an external DLL\n---------------------------\n");
                 if (false)
                 {
                     using (Py.GIL())
@@ -89,7 +89,7 @@ namespace pythonDotNet
                     }
                 }
 
-                Console.WriteLine($"\n---------------------------------------------------\nbasic python examples\n---------------------------------------------------\n");
+                Console.WriteLine($"\n---------------------------\nbasic python examples\n---------------------------\n");
                 if (false)
                 {
                     // obtain the GIL for thread safety
@@ -279,7 +279,7 @@ namespace pythonDotNet
                     }
                 }
 
-                Console.WriteLine($"\n---------------------------------------------------\npandas specific test code\n---------------------------------------------------\n");
+                Console.WriteLine($"\n---------------------------\npandas specific test code\n---------------------------\n");
                 if (false)
                 {
                     using (Py.GIL())
@@ -356,8 +356,8 @@ namespace pythonDotNet
                     }
                 }
 
-                Console.WriteLine($"\n---------------------------------------------------\nusing pandasnet to get pandas dataframe into C# datatable\n---------------------------------------------------\n");
-                if (true)
+                Console.WriteLine($"\n---------------------------\nusing pandasnet to get pandas dataframe into C# datatable\n---------------------------\n");
+                if (false)
                 { 
                     using (Py.GIL())
                     {
@@ -384,50 +384,113 @@ namespace pythonDotNet
                         })
 
                         # this will work in C# by itself as long as 'import pandasnet' is included
-                        print("DataFrame")
+                        print("DataFrame in python")
                         print(x)
 
                         # convert DataFrame to Dictionary<string, Array> == BasicDataFrame
                         # it looks like this is not necessarily required as the dataframe above also works
                         y = pdnet.BasicDataFrame(x)
 
-                        print("BasicDataFrame")
+                        print("BasicDataFrame in python")
                         print(y)
                         """;
 
                         using (dynamic scope = Py.CreateScope())
                         {
-                            Console.WriteLine($"-----------------\nscript:");
+                            Console.WriteLine($"-----------------\npython script:");
                             scope.Exec(pyScript);
 
                             Console.WriteLine($"-----------------\nC#:");
 
                             Dictionary<string, Array> df = scope.Eval("x");
-                            Console.WriteLine($"--------------------\nDataFrame\n--------------------\n{df}\n--------------------");
-                            DataTable dt1 = ConvertToDataTable(df);
-                            Console.WriteLine($"DataFrame DataTable (num rows {dt1.Rows.Count})\n--------------------\n{DumpDataTable(dt1)}\n--------------------");
-                            foreach (DataRow dataRow in dt1.Rows)
-                            {
-                                foreach (var item in dataRow.ItemArray)
-                                {
-                                    Console.WriteLine($"{item} {item.GetType()}");
-                                }
-                            }
-                            
+                            Console.WriteLine($"--------------------\nPython DataFrame to C# DataTable\n--------------------\n");
+                            using DataTable dt1 = ConvertToDataTable(df);
+                            Console.WriteLine($"--------------------\nDataTable (num rows {dt1.Rows.Count} columns {dt1.Columns.Count})\n--------------------\n{DumpDataTable(dt1)}\n--------------------");
+
                             Dictionary<string, Array> bdf = scope.Eval("y");
-                            DataTable dt2 = ConvertToDataTable(bdf);
-                            Console.WriteLine($"--------------------\nBasicDataFrame DataTable (num rows {dt2.Rows.Count})\n--------------------\n{DumpDataTable(dt2)}\n--------------------");
-                            foreach (DataRow dataRow in dt2.Rows)
-                            {
-                                foreach (var item in dataRow.ItemArray)
-                                {
-                                    Console.WriteLine($"{item} {item.GetType()}");
-                                }
-                            }
+                            Console.WriteLine($"--------------------\nPython BasicDataFrame to C# DataTable\n--------------------\n");
+                            using DataTable dt2 = ConvertToDataTable(bdf);
+                            Console.WriteLine($"--------------------\nBasicDataFrame DataTable (rows {dt2.Rows.Count} columns {dt2.Columns.Count})\n--------------------\n{DumpDataTable(dt2)}\n--------------------");
                         }
 
                     }
                 }
+
+                Console.WriteLine($"\n---------------------------\nC# datatable to python\n---------------------------\n");
+                if (true)
+                {
+                    using (Py.GIL())
+                    {
+                        DataTable dt = MakeDataTable();
+                        DataRow dr = null;
+                        object[] rowArray = new object[4];
+
+                        rowArray[0] = 1;
+                        rowArray[1] = 1.21;
+                        rowArray[2] = "foo";
+                        rowArray[3] = new DateTime(2021, 1, 21, 12, 0, 1);
+                        dr = dt.NewRow();
+                        dr.ItemArray = rowArray;
+                        dt.Rows.Add(dr);
+
+                        rowArray[0] = 2;
+                        rowArray[1] = 1.22;
+                        rowArray[2] = "bar";
+                        rowArray[3] = new DateTime(2021, 1, 22, 12, 0, 2);
+                        dr = dt.NewRow();
+                        dr.ItemArray = rowArray;
+                        dt.Rows.Add(dr);
+
+                        rowArray[0] = 3;
+                        rowArray[1] = 1.23;
+                        rowArray[2] = "other";
+                        rowArray[3] = new DateTime(2021, 1, 23, 12, 0, 3);
+                        dr = dt.NewRow();
+                        dr.ItemArray = rowArray;
+                        dt.Rows.Add(dr);
+
+                        Console.WriteLine($"-----------------\nDataTable\n-----------------\n{DumpDataTable(dt)}");
+
+                        var pyScript = """
+                        import clr
+                        import pandas as pd
+                        clr.AddReference("System.Data")
+                        from System.Data import DataTable, DataRow
+
+                        print("Convert C# datatable to Pandas DataFrame")
+
+                        # Extract column names
+                        columns = [col.ColumnName for col in dt.Columns]
+
+                        # Extract row data
+                        data = []
+                        for row in dt.Rows:
+                            row_data = [row[col.ColumnName] for col in dt.Columns]
+                            data.append(row_data)
+
+                        # Create a Pandas DataFrame
+                        df = pd.DataFrame(data, columns=columns)
+
+                        print("")
+                        print("DataFrame Info()")
+                        print(df.info())
+                        print("")
+                        print(df)
+                        """;
+
+                        using (dynamic scope = Py.CreateScope())
+                        {
+                            PyObject pyDt = dt.ToPython();
+
+                            scope.Set("dt", pyDt);
+
+                            Console.WriteLine($"-----------------\npython script:\n-----------------");
+                            scope.Exec(pyScript);
+                        }
+
+                    }
+                }
+
 
                 Console.WriteLine($"done.");
                 PythonEngine.EndAllowThreads(threadState);
@@ -520,9 +583,9 @@ namespace pythonDotNet
             }
         }
 
-        private static DataTable dataTable = null;
         public static DataTable ConvertToDataTable(Dictionary<string, Array> dict)
         {
+            DataTable dataTable = null;
             using (dataTable = new DataTable())
             {
                 if (dict.Count > 0)
@@ -548,21 +611,8 @@ namespace pythonDotNet
                         for (int col = 0; col < dict.Count; col++)
                         {
                             KeyValuePair<string, Array> p = dict.ElementAt(col);
-                            //Console.WriteLine($"row {row} col {col} key {p.Key} value {p.Value.GetValue(row)} type {p.Value.GetValue(row).GetType()}");
-                            //switch (p.Value.GetValue(row).GetType().ToString())
-                            //{
-                            //    case "System.Int64":
-                            //        Console.WriteLine($"System.Int64");
-                            //        dataRow[col] = Convert.ToInt64(p.Value.GetValue(row));
-                            //        break;
-                            //    default:
-                            //        Console.WriteLine($">>>>>>>>>>>>> unhandled type {p.Value.GetValue(row).GetType().ToString()}");
-                            //        dataRow[col] = p.Value.GetValue(row);
-                            //        break;
-                            //}
                             dataRow[col] = p.Value.GetValue(row);
                         }
-
                         dataTable.Rows.Add(dataRow);
                     }
                 }
@@ -574,7 +624,9 @@ namespace pythonDotNet
         {
             string data = string.Empty;
             StringBuilder sb = new StringBuilder();
-            foreach( DataColumn c in table.Columns)
+            sb.AppendLine("DumpDataTable");
+            sb.AppendLine("---------------------------------------");
+            foreach ( DataColumn c in table.Columns)
             {
                 sb.Append(c.ColumnName);
                 sb.Append(',');
@@ -586,7 +638,7 @@ namespace pythonDotNet
                 {
                     foreach (var item in dataRow.ItemArray)
                     {
-                        sb.Append(item);
+                        sb.Append($"{item} [{item.GetType()}]");
                         sb.Append(',');
                     }
                     sb.AppendLine();
@@ -595,6 +647,17 @@ namespace pythonDotNet
             }
             return data;
         }
+
+        private static DataTable MakeDataTable()
+        {
+            DataTable table = new DataTable("cSharpDataTable");
+            table.Columns.Add(new DataColumn("A", Type.GetType("System.Int64")));
+            table.Columns.Add(new DataColumn("B", Type.GetType("System.Double")));
+            table.Columns.Add(new DataColumn("C", Type.GetType("System.String")));
+            table.Columns.Add(new DataColumn("D", Type.GetType("System.DateTime")));
+            return table;
+        }
+
     }
 
     public class Person
