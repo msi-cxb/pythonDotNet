@@ -57,7 +57,7 @@ namespace pythonDotNet
                 Console.WriteLine($"starting...");
 
                 Console.WriteLine($"\n---------------------------\nbasic python examples\n---------------------------\n");
-                if (true)
+                if (false)
                 {
                     // obtain the GIL for thread safety
                     using (Py.GIL())
@@ -247,7 +247,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------\nusing an external DLL\n---------------------------\n");
-                if (true)
+                if (false)
                 {
                     using (Py.GIL())
                     {
@@ -280,7 +280,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------\npandas specific test code\n---------------------------\n");
-                if (true)
+                if (false)
                 {
                     using (Py.GIL())
                     {
@@ -357,7 +357,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------\npandas dataframe to C# datatable (via pandasnet)\n---------------------------\n");
-                if (true)
+                if (false)
                 { 
                     using (Py.GIL())
                     {
@@ -417,7 +417,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------\nC# datatable to python pandas dataframe\n---------------------------\n");
-                if (true)
+                if (false)
                 {
                     using (Py.GIL())
                     {
@@ -491,6 +491,26 @@ namespace pythonDotNet
                     }
                 }
 
+                Console.WriteLine($"\n---------------------------\npython sqlglot\n---------------------------\n");
+                if (true)
+                {
+                    // https://github.com/tobymao/sqlglot
+                    using (Py.GIL())
+                    {
+                        Console.WriteLine($"-----------------\nsqlglotExample.py\n-----------------");
+
+                        string scriptDir = Directory.GetCurrentDirectory();
+                        dynamic sys = Py.Import("sys");
+                        sys.path.append(scriptDir);
+
+                        using (dynamic scope = Py.CreateScope())
+                        {
+                            // load and run sqlglotExample.py
+                            dynamic sqlglotExample = Py.Import("sqlglotExample");
+                        }
+
+                    }
+                }
 
                 Console.WriteLine($"done.");
                 PythonEngine.EndAllowThreads(threadState);

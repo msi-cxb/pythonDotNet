@@ -22,4 +22,10 @@
     <PackageReference Include="pythonnet" Version="3.0.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="sqlglotExample.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

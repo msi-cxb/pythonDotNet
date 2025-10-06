@@ -36,7 +36,9 @@
 - using MiniConda with python 3.13.5
 - Visual Studio 2022 17.14.11 with .NET 8 console app project
 - install python.net using NuGet (version 3.0.5)
-- using conda virtual environment named 'numpy' with numpy, pandas, pandasnet installed
+- using conda virtual environment named 'numpy' with numpy and pandas (and dependencies determined via `conda install`)
+  - pythonnet and pandasnet installed via pip
+
 - https://github.com/msi-cxb/pythonDotNet
 
 ## Notes
@@ -83,7 +85,7 @@
 
 ## C# DataTable <---> Python Pandas DataFrame
 
-Bottom line is that some code is necessary to convert between C# DataTable and Python Pandas DataFrame is required. There is no automatic conversion. However, it is not that difficult. 
+Bottom line PythonNET cannot do this by itself. Some code is necessary to convert between C# DataTable and Python Pandas DataFrame is required. There is no automatic conversion. However, it is not that difficult. 
 
 ### Python Pandas DataFrame to C# DataTable
 
@@ -421,12 +423,149 @@ None
 0  1  1.21    foo  1/21/2021 12:00:01 PM
 1  2  1.22    bar  1/22/2021 12:00:02 PM
 2  3  1.23  other  1/23/2021 12:00:03 PM
+
+---------------------------
+python sqlglot
+---------------------------
+
+-----------------
+sqlglotExample.py
+-----------------
+SELECT UNIX_TO_TIME(1618088028295, 3)
+SELECT STRFTIME('%y-%-m-%S', x)
+WITH `baz` AS (
+  SELECT
+    `a`,
+    `c`
+  FROM `foo`
+  WHERE
+    `a` = 1
+)
+SELECT
+  `f`.`a`,
+  `b`.`b`,
+  `baz`.`c`,
+  CAST(`b`.`a` AS FLOAT) AS `d`
+FROM `foo` AS `f`
+JOIN `bar` AS `b`
+  ON `f`.`a` = `b`.`a`
+LEFT JOIN `baz`
+  ON `f`.`a` = `baz`.`a`
+/* multi
+   line
+   comment
+*/
+SELECT
+  tbl.cola /* comment 1 */ + tbl.colb /* comment 2 */,
+  CAST(x AS SIGNED), /* comment 3 */
+  y /* comment 4 */
+FROM bar /* comment 5 */, tbl /*          comment 6 */
+a
+b
+a
+c
+x
+y
+z
+SELECT * FROM y WHERE x = 1 AND y = 1
+SELECT FUN(a) FROM x
+SELECT
+  (
+    "x"."a" <> 0 OR "x"."b" <> 0 OR "x"."c" <> 0
+  )
+  AND (
+    "x"."a" <> 0 OR "x"."b" <> 0 OR "x"."d" <> 0
+  ) AS "_col_0"
+FROM "x" AS "x"
+WHERE
+  CAST("x"."z" AS DATE) = CAST('2021-02-01' AS DATE)
+Select(
+  expressions=[
+    Alias(
+      this=Add(
+        this=Column(
+          this=Identifier(this=a, quoted=False)),
+        expression=Literal(this=1, is_string=False)),
+      alias=Identifier(this=z, quoted=False))])
+[Remove(expression=Add(
+  this=Column(
+    this=Identifier(this=a, quoted=False)),
+  expression=Column(
+    this=Identifier(this=b, quoted=False)))), Insert(expression=Sub(
+  this=Column(
+    this=Identifier(this=a, quoted=False)),
+  expression=Column(
+    this=Identifier(this=b, quoted=False)))), Move(source=Column(
+  this=Identifier(this=a, quoted=False)), target=Column(
+  this=Identifier(this=a, quoted=False))), Keep(source=Column(
+  this=Identifier(this=a, quoted=False)), target=Column(
+  this=Identifier(this=a, quoted=False))), Keep(source=Column(
+  this=Identifier(this=c, quoted=False)), target=Column(
+  this=Identifier(this=c, quoted=False))), Keep(source=Column(
+  this=Identifier(this=d, quoted=False)), target=Column(
+  this=Identifier(this=d, quoted=False))), Move(source=Column(
+  this=Identifier(this=b, quoted=False)), target=Column(
+  this=Identifier(this=b, quoted=False))), Keep(source=Column(
+  this=Identifier(this=b, quoted=False)), target=Column(
+  this=Identifier(this=b, quoted=False))), Keep(source=Select(
+  expressions=[
+    Add(
+      this=Column(
+        this=Identifier(this=a, quoted=False)),
+      expression=Column(
+        this=Identifier(this=b, quoted=False))),
+    Column(
+      this=Identifier(this=c, quoted=False)),
+    Column(
+      this=Identifier(this=d, quoted=False))]), target=Select(
+  expressions=[
+    Column(
+      this=Identifier(this=c, quoted=False)),
+    Sub(
+      this=Column(
+        this=Identifier(this=a, quoted=False)),
+      expression=Column(
+        this=Identifier(this=b, quoted=False))),
+    Column(
+      this=Identifier(this=d, quoted=False))]))]
+user_id price
+      1   4.0
+      2   3.0
 done.
 Shutdown start
 Shutdown stop 3.8166418
 Press any key to continue...
 ```
 
+## Possible Uses
+
+Here are some ideas on how PythonNET could be used:
+
+### SQLGlot
+
+See SQLGlot in [References](#References). 
+
+SQLGlot is a `no-dependency` SQL parser, transpiler, optimizer, and engine. It can be used to format SQL or translate between [30 different dialects](https://github.com/tobymao/sqlglot/blob/main/sqlglot/dialects/__init__.py) like [DuckDB](https://duckdb.org/), [Presto](https://prestodb.io/) / [Trino](https://trino.io/), [Spark](https://spark.apache.org/) / [Databricks](https://www.databricks.com/), [Snowflake](https://www.snowflake.com/en/), and [BigQuery](https://cloud.google.com/bigquery/). It aims to read a wide variety of SQL inputs and output syntactically and semantically correct SQL in the targeted dialects.
+
+For example, it can be used to translate SQLite3 <---> DuckDB. It also supports Postgres. 
+
+### Charting
+
+Charting libraries like matplotlib can be used to create charts. Data can be either transferred from C# to Python OR data can be exported to csv/parquet files and then imported and processed with python. 
+
+## Reproducable Python Environment
+
+Once an environment has been created via `conda`, you can create a `environment.yaml` file to export the dependencies so that the environment can be reproduced. The command to create `environment.yaml`  is:
+
+```python
+conda env export --no-builds | grep -v "^prefix: " > environment.yaml
+```
+
+The resulting `environment.yaml` can then be used to reproduce the environment:
+
+```python
+    conda env create -f environment.yml
+```
 
 
 
@@ -521,18 +660,28 @@ Optimization Strategies:
 
   * [Pythonnet – A Simple Union of .NET Core and Python You’ll Love - CodeProject](https://www.codeproject.com/Articles/5352648/Pythonnet-A-Simple-Union-of-NET-Core-and-Python-Yo)
   * [Calling Python from C#: an introduction to PythonNET | by somegenericdev | Medium](https://somegenericdev.medium.com/calling-python-from-c-an-introduction-to-pythonnet-c3d45f7d5232)
-  
+
   * [Intro to Pythonnet](https://www.youtube.com/watch?v=gFO12dJLBGI&list=PLcFcktZ0wnNnz07eWc7N5ao1dyiXoV-ib&index=1) - series of 11 tutorial videos on Python.NET
-  
+
   * [Python and IronPython scripting and debugging - AlterNET Software](https://www.alternetsoft.com/blog/python-net-iron-python-scripting)
 
-- Deployment hints
-  - [Conda Python environments are standalone and can be deployed with your application](https://github.com/pythonnet/pythonnet/issues/463#issuecomment-302818208) discusses that conda `virtual environment` is self-contained (a folder of files ) and portable and can be included with your C# app using robocopy.  
-- Github Sample Code
+* Deployment hints
+
+  * [Conda Python environments are standalone and can be deployed with your application](https://github.com/pythonnet/pythonnet/issues/463#issuecomment-302818208) discusses that conda `virtual environment` is self-contained (a folder of files ) and portable and can be included with your C# app using robocopy. 
+
+* Github Sample Code
+
   - [First steps with Python.NET](https://www.libreautomate.com/forum/showthread.php?tid=7484) has Pynet.cs class and discusses the BinaryFormatter issue
+
   - https://github.com/yagweb/pythonnetLab
+
   - https://github.com/olonok69/LLM_Notebooks/blob/main/microsoft/csharp/pythonNet/Program.cs
-- Related Projects
+
+* Related Projects
+
   * [fdieulle/pandasnet](https://github.com/fdieulle/pandasnet)  - pandasnet is a python package build on top of pythonnet. It provides additional data conversions for pandas, numpy and datetime.
-  
+
+
   * [SciSharp/NumSharp: High Performance Computation for N-D Tensors in .NET, similar API to NumPy.](https://github.com/SciSharp/NumSharp)
+
+* [sqlglot](https://github.com/tobymao/sqlglot)
