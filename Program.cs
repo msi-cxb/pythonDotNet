@@ -57,7 +57,7 @@ namespace pythonDotNet
                 Console.WriteLine($"starting...");
 
                 Console.WriteLine($"\n---------------------------\nbasic python examples\n---------------------------\n");
-                if (false)
+                if (true)
                 {
                     // obtain the GIL for thread safety
                     using (Py.GIL())
@@ -247,7 +247,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------\nusing an external DLL\n---------------------------\n");
-                if (false)
+                if (true)
                 {
                     using (Py.GIL())
                     {
@@ -255,7 +255,7 @@ namespace pythonDotNet
                         import clr
                         import sys
 
-                        assembly_path = r"H:\PythonDotNetDLL\bin\Debug\net8.0"
+                        assembly_path = r"G:\PythonDotNetDLL\bin\Debug\net8.0"
                         sys.path.append(assembly_path)
                         print(sys.path)
 
@@ -280,7 +280,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------\npandas specific test code\n---------------------------\n");
-                if (false)
+                if (true)
                 {
                     using (Py.GIL())
                     {
@@ -357,7 +357,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------\npandas dataframe to C# datatable (via pandasnet)\n---------------------------\n");
-                if (false)
+                if (true)
                 { 
                     using (Py.GIL())
                     {
@@ -417,7 +417,7 @@ namespace pythonDotNet
                 }
 
                 Console.WriteLine($"\n---------------------------\nC# datatable to python pandas dataframe\n---------------------------\n");
-                if (false)
+                if (true)
                 {
                     using (Py.GIL())
                     {
