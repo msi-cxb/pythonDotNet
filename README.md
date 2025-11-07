@@ -39,7 +39,7 @@
 - using conda virtual environment named 'numpy' with numpy and pandas (and dependencies determined via `conda install`)
   - pythonnet and pandasnet installed via pip
 
-- https://github.com/msi-cxb/pythonDotNet
+- demo program: https://github.com/msi-cxb/pythonDotNet
 
 ## Notes
 
@@ -154,8 +154,6 @@ public static DataTable ConvertToDataTable(Dictionary<string, Array> dict)
 
 ```
 
-
-
 ### C# DataTable to Python Pandas DataFrame
 
 In the C# code below, `dt` is a C# DataTable. PythonNet is then used to create a python object from the DataTable, and then the python script is executed that uses the DataTable python object to create a DataFrame.
@@ -201,9 +199,11 @@ print(df)
 
 ## Test Program Example Output 
 
-```
+Here is output from demo program: https://github.com/msi-cxb/pythonDotNet
+
+```cmd
 *** PYTHONTZPATH
-PATH C:\Program Files\Parallels\Parallels Tools\Applications;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\TortoiseGit\bin;C:\Program Files\Git\cmd;C:\Program Files\GitHub CLI\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files\dotnet\;C:\Users\charlie\AppData\Local\Microsoft\WindowsApps;M:\tools\bin;C:\Users\charlie\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\charlie\.dotnet\tools;M:\tools\_alias;M:\tools\bin\vim91;C:\Users\charlie\miniconda3\envs\numpy
+PATH C:\Program Files\Parallels\Parallels Tools\Applications;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\TortoiseGit\bin;C:\Program Files\Git\cmd;C:\Program Files\GitHub CLI\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files\dotnet\;C:\Users\charlie\AppData\Local\Microsoft\WindowsApps;M:\tools\bin;M:\tools\graphviz;C:\Users\charlie\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\charlie\.dotnet\tools;M:\tools\_alias;M:\tools\bin\vim91;C:\Users\charlie\miniconda3\envs\numpy
 PYTHONHOME C:\Users\charlie\miniconda3\envs\numpy
 PYTHONPATH C:\Users\charlie\miniconda3\envs\numpy\Lib\site-packages;C:\Users\charlie\miniconda3\envs\numpy\Lib;C:\Users\charlie\miniconda3\envs\numpy\DLLs;C:\Users\charlie\miniconda3\envs\numpy\Library\lib
 TZPATH C:\Users\charlie\miniconda3\envs\numpy\share\zoneinfo
@@ -260,7 +260,7 @@ using an external DLL
 
 -----------------
 script:
-['C:\\Users\\charlie\\miniconda3\\envs\\numpy\\Lib\\site-packages', 'C:\\Users\\charlie\\miniconda3\\envs\\numpy\\Lib', 'C:\\Users\\charlie\\miniconda3\\envs\\numpy\\DLLs', 'C:\\Users\\charlie\\miniconda3\\envs\\numpy\\Library\\lib', 'C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.19\\', 'H:\\pythonDotNet\\bin\\Debug\\net8.0', 'H:\\PythonDotNetDLL\\bin\\Debug\\net8.0']
+['C:\\Users\\charlie\\miniconda3\\envs\\numpy\\Lib\\site-packages', 'C:\\Users\\charlie\\miniconda3\\envs\\numpy\\Lib', 'C:\\Users\\charlie\\miniconda3\\envs\\numpy\\DLLs', 'C:\\Users\\charlie\\miniconda3\\envs\\numpy\\Library\\lib', 'C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.21\\', 'G:\\pythonDotNet\\bin\\Debug\\net8.0', 'G:\\PythonDotNetDLL\\bin\\Debug\\net8.0']
 2
 -1
 
@@ -387,7 +387,7 @@ A,B,C,D,
 --------------------
 
 ---------------------------
-C# datatable to python
+C# datatable to python pandas dataframe
 ---------------------------
 
 -----------------
@@ -495,15 +495,11 @@ Select(
   this=Column(
     this=Identifier(this=a, quoted=False)),
   expression=Column(
-    this=Identifier(this=b, quoted=False)))), Move(source=Column(
-  this=Identifier(this=a, quoted=False)), target=Column(
-  this=Identifier(this=a, quoted=False))), Keep(source=Column(
-  this=Identifier(this=a, quoted=False)), target=Column(
-  this=Identifier(this=a, quoted=False))), Keep(source=Column(
-  this=Identifier(this=c, quoted=False)), target=Column(
-  this=Identifier(this=c, quoted=False))), Keep(source=Column(
+    this=Identifier(this=b, quoted=False)))), Keep(source=Column(
   this=Identifier(this=d, quoted=False)), target=Column(
-  this=Identifier(this=d, quoted=False))), Move(source=Column(
+  this=Identifier(this=d, quoted=False))), Keep(source=Column(
+  this=Identifier(this=c, quoted=False)), target=Column(
+  this=Identifier(this=c, quoted=False))), Move(source=Column(
   this=Identifier(this=b, quoted=False)), target=Column(
   this=Identifier(this=b, quoted=False))), Keep(source=Column(
   this=Identifier(this=b, quoted=False)), target=Column(
@@ -527,13 +523,17 @@ Select(
       expression=Column(
         this=Identifier(this=b, quoted=False))),
     Column(
-      this=Identifier(this=d, quoted=False))]))]
+      this=Identifier(this=d, quoted=False))])), Move(source=Column(
+  this=Identifier(this=a, quoted=False)), target=Column(
+  this=Identifier(this=a, quoted=False))), Keep(source=Column(
+  this=Identifier(this=a, quoted=False)), target=Column(
+  this=Identifier(this=a, quoted=False)))]
 user_id price
       1   4.0
       2   3.0
 done.
 Shutdown start
-Shutdown stop 3.8166418
+Shutdown stop 5.2431717
 Press any key to continue...
 ```
 
